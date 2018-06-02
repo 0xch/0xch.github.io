@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Approaches for PHPUnit tests using a database</title>
+  <meta name="description" content="To be executed often unit tests need to run fast and there should be no problems with their initial configuration.Otherwise, nobody would use them as a tool ...">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface" async>
+  <link rel="canonical" href="https://0xch.github.io/2017/06/10/phpunit-tests-using-database-approaches/">
+  <link rel="alternate" type="application/rss+xml" title="BlackHole - dev blog" href="https://0xch.github.io/feed.xml">
+</head>
+
+
+  <body>
+
+    <div class="sidebar">
+    <div class="sidebar-about">
+      <h1>
+        <a href="/">
+          BlackHole - dev blog
+        </a>
+      </h1>
+      <p class="lead">Dev blog</p>
+    </div>
+
+    <nav class="sidebar-nav">
+        Pages:
+      <a class="sidebar-nav-item" href="/">Home</a>
+        
+             
+        
+             
+                
+            
+        
+             
+        
+             
+        
+
+      <br/>
+        Posts:
+      
+        
+            <a class="sidebar-nav-item" href="/2017/06/18/symfony-tdd-phpunit-doctrine/">Symfony PHPUnit tests using Doctrine</a>
+        
+      
+        
+            <a class="sidebar-nav-item active" href="/2017/06/10/phpunit-tests-using-database-approaches/">Approaches for PHPUnit tests using a database</a>
+        
+      
+        
+            <a class="sidebar-nav-item" href="/2017/06/04/how-to-prepare-for-zend-php-certification/">How to prepare for Zend PHP Certification</a>
+        
+      
+
+
+    </nav>
+</div>
+
+
+    <div class="content container">
+      <div class="post">
+  <h1 class="post-title">Approaches for PHPUnit tests using a database</h1>
+  <span class="post-date">10 Jun 2017</span>
+  <p>To be executed often unit tests need to run fast and there should be no problems with their initial configuration.
+Otherwise, nobody would use them as a tool to improve the whole process, but threat them like annoying requirements.</p>
+
+<p>Most problems cause tests using a database. How to setup? How to make it run fast and without problem on CI machine as on developers computers?</p>
+
+<h2 id="approaches-for-unit-tests-using-a-database">Approaches for unit tests using a database</h2>
+<p>There are several ways to maintain a database schema for test purposes. The most popular are:</p>
+
+<ul>
+  <li>
+    <p><strong>Prepare the DB at once</strong><br />
+The point here is to keep scripts(migrations) to create an up-to-date schema in the version control system. Scripts can also be used to supply the initial data.
+Tests are executed in a transaction and are always rolled back, so the initial data remains and you keep the database clean. 
+The main issue is to remember to update the test schema when updating production.
+Sometimes developers don’t care to create migration database script. They just update the production/common database. In this case they can’t do it. Test schema must be updated on every developer’s computer too.</p>
+  </li>
+  <li>
+    <p><strong>Drop &amp; Create</strong><br />
+Generate and drop the schema every time the test is run. To avoid creating useless tables and save execution time for every test there is list of table names to create. When used with a memory database, like SQLite it’s very fast.
+The problem starts when you want to use your production database engine’s specific features what SQLite don’t have. The slight disadvantage is that the developers need to write the tables for every test class. 
+Sometimes on an old project, with many references between tables, it can be very long list to write.</p>
+  </li>
+  <li>
+    <p><strong>Update when needed</strong><br />
+Before test execution there is check in code whether the schema is up to date and update it if it isn’t. It’s a very convenient solution because you don’t have to worry about maintaining every schema separately.
+But the check does take a slight amount of additional test execution time.
+Using this approach tests can be executed in a transaction to remove saved data or truncate used tables.</p>
+  </li>
+</ul>
+
+<hr />
+
+<p><img src="/img/girl-computer-bored.jpg" alt="Lost in computer" /></p>
+
+<hr />
+
+<h2 id="what-about-the-initial-data-in-the-database">What about the initial data in the database</h2>
+<p>Again there are three ways(have I mentioned 3 is the magic number?) to use initial data in the schema:</p>
+
+<ul>
+  <li><strong>Factories</strong><br />
+Write factories to populate the schema with the required data. It’s a class which helps us to create specific database data, ie <em>create user with assigned department</em>  . This gives great test readability, look at the following example:</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-php" data-lang="php"><span class="sd">/**</span>
+<span class="sd"> * @test</span>
+<span class="sd"> */</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">shouldGetCompanyUsers</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//given</span>
+    <span class="nv">$company</span> <span class="o">=</span> <span class="nx">\Tests\CompanyFactory</span><span class="o">::</span><span class="na">createCompany</span><span class="p">();</span>  <span class="c1">//create company and insert to db</span>
+    <span class="nv">$newUser</span> <span class="o">=</span> <span class="nx">\Tests\UserFactory</span><span class="o">::</span><span class="na">createUserForCompany</span><span class="p">(</span><span class="nv">$company</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span>
+
+    <span class="c1">//when</span>
+    <span class="nv">$users</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">getAllForCompany</span><span class="p">(</span><span class="nv">$company</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span>
+    
+    <span class="c1">//then</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nv">$newUser</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">,</span> <span class="nv">$users</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>When reading it the developer can see exactly what data was created and it’s easy to understand how the tested function should work.</p>
+
+<ul>
+  <li><strong>Fixtures</strong><br />
+Another option is to use fixtures and execute them (all or selected) before every test. This is clean solution and well supported by most frameworks. It does give more control of the initial data in tests.
+When you need to populate a single test with specific data you can make a specific fixture (which can sometimes lead to having a large number of fixture files and a mess) or use factories.
+There is a small problem with fixtures - you don’t know the values of the inserted records. You have to make an additional fetch if you need them in the tested function/assertion.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-php" data-lang="php"><span class="sd">/**</span>
+<span class="sd"> * @test</span>
+<span class="sd"> */</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">shouldGetCategories</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//given</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addFixtures</span><span class="p">([</span>
+        <span class="k">new</span> <span class="nx">Companies</span><span class="p">(),</span>
+        <span class="k">new</span> <span class="nx">Users</span><span class="p">()</span>
+    <span class="p">]);</span>
+    <span class="nv">$company</span> <span class="o">=</span> <span class="nx">Company</span><span class="o">::</span><span class="na">where</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">first</span><span class="p">();</span>  <span class="c1">//additional fetch for fixture data</span>
+
+    <span class="c1">//when</span>
+    <span class="nv">$fetchUsers</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">getAllForCompany</span><span class="p">(</span><span class="nv">$company</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span>
+    
+    <span class="c1">//then</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertCount</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nv">$fetchUsers</span><span class="p">);</span>
+    
+    <span class="nv">$newUser</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">()</span><span class="o">-&gt;</span><span class="na">first</span><span class="p">();</span>  <span class="c1">//additional fetch for fixture data</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nv">$newUser</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">,</span> <span class="nv">$fetchUsers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span> <span class="c1">//to make this assertion works </span>
+<span class="p">}</span></code></pre></figure>
+
+<ul>
+  <li><strong>SQL script</strong><br />
+Use script with SQL queries to populate the database with data when creating tables. I would not recommend it because when someone else is looking at the test case it’s not obvious where the data comes from.
+Also every developer would need to have good understanding of what the initial data in a project is. An additional problem is that rows in the initial data are bounded to specific tests by ids/names/etc.
+That makes it hard to edit in the future.</li>
+</ul>
+
+<figure class="highlight"><pre><code class="language-php" data-lang="php"><span class="sd">/**</span>
+<span class="sd"> * @test</span>
+<span class="sd"> */</span>
+<span class="k">public</span> <span class="k">function</span> <span class="nf">shouldGetCategories</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="c1">//given</span>
+    <span class="nv">$companyId</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">//where that data comes from? Ah... specific `id` from initial data - bad approach!</span>
+    <span class="c1">//or:</span>
+    <span class="nv">$company</span> <span class="o">=</span> <span class="nx">Company</span><span class="o">::</span><span class="na">where</span><span class="p">([</span><span class="s1">&#39;name&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;companyWithUser&#39;</span><span class="p">])</span><span class="o">-&gt;</span><span class="na">first</span><span class="p">();</span>  <span class="c1">//need to distinguish somehow companies</span>
+
+    <span class="c1">//when</span>
+    <span class="nv">$fetchUsers</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">getAllForCompany</span><span class="p">(</span><span class="nv">$company</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span>
+    
+    <span class="c1">//then</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertCount</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nv">$fetchUsers</span><span class="p">);</span>
+    
+    <span class="nv">$newUser</span> <span class="o">=</span> <span class="nx">User</span><span class="o">::</span><span class="na">where</span><span class="p">([</span><span class="s1">&#39;name&#39;</span><span class="o">=&gt;</span><span class="s1">&#39;userWithCompany&#39;</span><span class="p">])</span><span class="o">-&gt;</span><span class="na">first</span><span class="p">();</span>  <span class="c1">//additional fetch for schema data</span>
+    <span class="nv">$this</span><span class="o">-&gt;</span><span class="na">assertEquals</span><span class="p">(</span><span class="nv">$newUser</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">,</span> <span class="nv">$fetchUsers</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-&gt;</span><span class="na">id</span><span class="p">);</span> <span class="c1">//to make this assertion works </span>
+<span class="p">}</span></code></pre></figure>
+
+<p>Many developers use an <code>id</code> to bind schema data to the tests. At the beginning it looks harmless, but later it makes complete madness when reading the tests.
+Every time you have to go to the file <code>initial_data_new_new.sql</code> and look for <code>id=2321365</code>, to know what is happening in test,it really doesn’t make your life easier.</p>
+
+<p><img src="/img/anime-computer-bad.gif" alt="Lost in computer" /></p>
+
+
+</div>
+
+<div class="related">
+  <h2>Related Posts</h2>
+  <ul class="related-posts">
+    
+      <li>
+        <h3>
+          <a href="/2017/06/18/symfony-tdd-phpunit-doctrine/">
+            Symfony PHPUnit tests using Doctrine
+            <small>18 Jun 2017</small>
+          </a>
+        </h3>
+      </li>
+    
+      <li>
+        <h3>
+          <a href="/2017/06/04/how-to-prepare-for-zend-php-certification/">
+            How to prepare for Zend PHP Certification
+            <small>04 Jun 2017</small>
+          </a>
+        </h3>
+      </li>
+    
+  </ul>
+</div>
+
+    </div>
+
+
+    
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-102584661-1"></script>
+      <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'UA-102584661-1');
+      </script>
+    
+
+  </body>
+</html>

@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>BlackHole - dev blog</title>
+    <description>Dev blog</description>
+    <link>https://0xch.github.io/</link>
+    <atom:link href="https://0xch.github.io/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Sat, 02 Jun 2018 16:35:45 +0800</pubDate>
+    <lastBuildDate>Sat, 02 Jun 2018 16:35:45 +0800</lastBuildDate>
+    <generator>Jekyll v3.0.1</generator>
+    
+      <item>
+        <title>Symfony PHPUnit tests using Doctrine</title>
+        <description>&lt;p&gt;You can use Symfony features to easily create our test case. It automatically keeps your database schema up-to-date, creates fixtures and removes data after a test.&lt;/p&gt;
+
+&lt;p&gt;The basic use of PHPUnit with Symfony is well documented in the &lt;a href=&quot;http://symfony.com/doc/current/testing.html&quot;&gt;Official Symfony documentation&lt;/a&gt;, but what about tests using a relational database with Doctrine?
+It doesn’t work “out of the box” in Symfony. So we have to write it ourselves. &lt;a href=&quot;/2017/06/10/phpunit-tests-using-database-approaches.html&quot;&gt;Here you can read about different approaches&lt;/a&gt; for maintaining a database with tests.
+In this article, I’ll show you how to implement the &lt;em&gt;“Update when needed”&lt;/em&gt; process with fixtures.&lt;/p&gt;
+
+&lt;h2 id=&quot;keeping-database-up-to-date&quot;&gt;Keeping database up-to-date&lt;/h2&gt;
+&lt;p&gt;Nobody wants to think about maintaining the test database. Just create a schema once and set up the credentials in the configuration file(&lt;code&gt;config/test/config.yml&lt;/code&gt;). Then don’t worry about updating it - it will be done automatically.
+There is great functionality to do it hassle-free - using &lt;em&gt;Doctrine’s&lt;/em&gt; &lt;code&gt;SchemaTool::updateSchema()&lt;/code&gt;.
+The main downside is that it can take some time, depending on the size of database schema (from 1 second for a small/medium schema to several seconds on a big schema!).
+I created a separate class because it’s needed to extend the &lt;code&gt;KernelTestCase&lt;/code&gt; to get the application’s &lt;code&gt;kernel&lt;/code&gt;.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;GenerateSchema&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;KernelTestCase&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;generate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$kernel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createKernel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$kernel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;boot&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$entityManager&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$kernel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getContainer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;doctrine.orm.entity_manager&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$metadata&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$entityManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getMetadataFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAllMetadata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;nv&quot;&gt;$tool&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;SchemaTool&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$entityManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$tool&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;updateSchema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$metadata&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;You can use the above class in function &lt;code&gt;DbTestCase::setUpBeforeClass()&lt;/code&gt;, but it would execute before every test class, which is a complete runtime time waste. It’s better to execute it once.
+It doesn’t matter if we run all tests, a specific test suite or a single test. It will be always executed once. To do that you will need to create a custom &lt;code&gt;bootstrap.php&lt;/code&gt; to add these functionalities, e.g. &lt;code&gt;tests.bootstrap.php&lt;/code&gt;.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;php&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;__DIR__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/bootstrap.php.cache&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$schema&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;\Tests\GenerateSchema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$schema&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;generate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Then set the new &lt;code&gt;bootstrap&lt;/code&gt; in the phpunit configuration file (default: &lt;code&gt;app/phpunit.xml.dist&lt;/code&gt;)&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;phpunit&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;xmlns:xsi=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&lt;/span&gt;
+         &lt;span class=&quot;na&quot;&gt;bootstrap=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;tests.bootstrap.php&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+...
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/phpunit&amp;gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Remember to execute phpunit using this configuration, e.g.
+&lt;code&gt;phpunit -c app/phpunit.xml.dist tests/&lt;/code&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;fixtures&quot;&gt;Fixtures&lt;/h2&gt;
+&lt;p&gt;To have the possibility if adding specific fixtures for a test you can use Symfony’s fixture functionality.
+There are two methods you can use: &lt;code&gt;DbTestCase::addFixture()&lt;/code&gt; and &lt;code&gt;DbTestCase::execute()&lt;/code&gt; which can be used by chaining, e.g.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UsersFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;executeFixtures&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;I extended &lt;code&gt;WebTestCase&lt;/code&gt; because I would use it to test HTTP responses. If you don’t need it, just extend &lt;code&gt;KernelTestCase&lt;/code&gt;. Then you will need to extend this &lt;em&gt;test case&lt;/em&gt; in your every test class.
+Also, I exposed &lt;code&gt;EntityManager&lt;/code&gt; for use in tests, to get the necessary repositories from entity class.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DbTestCase&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;WebTestCase&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @var Loader&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$loader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @var EntityManager&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$em&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;setUp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;parent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;setUp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;bootKernel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$em&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$kernel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getContainer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;doctrine.orm.entity_manager&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Adds a new fixture to be loaded.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     *&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @param FixtureInterface $fixture&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * @return $this&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;addFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;FixtureInterface&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;loader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;loader&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Loader&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;loader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$fixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     * Executes all the fixtures that have been loaded so far.&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt;     */&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;protected&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;executeFixtures&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$purger&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ORMPurger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$executor&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ORMExecutor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$em&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$purger&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;nv&quot;&gt;$executor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;loader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getFixtures&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//append fixtures intead of cleaning&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h3 id=&quot;cleaning-the-database&quot;&gt;Cleaning the database&lt;/h3&gt;
+&lt;p&gt;If you have fixtures for every table you set &lt;code&gt;ORMExecutor&lt;/code&gt; to remove data from a database for tables with fixtures.
+However, it’s not a bulletproof solution. Imagine if a new table is created without a fixture. Then data in this table will be not cleaned after each test execution.
+There is a fast and efficient solution - wrapping every single test into a database transaction. To do it we can use &lt;a href=&quot;https://github.com/dmaicher/doctrine-test-bundle&quot;&gt;this library for Symfony (doctrine-test-bundle)&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Remember to clean the whole schema used for tests before using it again.&lt;/p&gt;
+
+</description>
+        <pubDate>Sun, 18 Jun 2017 20:00:00 +0800</pubDate>
+        <link>https://0xch.github.io/2017/06/18/symfony-tdd-phpunit-doctrine/</link>
+        <guid isPermaLink="true">https://0xch.github.io/2017/06/18/symfony-tdd-phpunit-doctrine/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Approaches for PHPUnit tests using a database</title>
+        <description>&lt;p&gt;To be executed often unit tests need to run fast and there should be no problems with their initial configuration.
+Otherwise, nobody would use them as a tool to improve the whole process, but threat them like annoying requirements.&lt;/p&gt;
+
+&lt;p&gt;Most problems cause tests using a database. How to setup? How to make it run fast and without problem on CI machine as on developers computers?&lt;/p&gt;
+
+&lt;h2 id=&quot;approaches-for-unit-tests-using-a-database&quot;&gt;Approaches for unit tests using a database&lt;/h2&gt;
+&lt;p&gt;There are several ways to maintain a database schema for test purposes. The most popular are:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Prepare the DB at once&lt;/strong&gt;&lt;br /&gt;
+The point here is to keep scripts(migrations) to create an up-to-date schema in the version control system. Scripts can also be used to supply the initial data.
+Tests are executed in a transaction and are always rolled back, so the initial data remains and you keep the database clean. 
+The main issue is to remember to update the test schema when updating production.
+Sometimes developers don’t care to create migration database script. They just update the production/common database. In this case they can’t do it. Test schema must be updated on every developer’s computer too.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Drop &amp;amp; Create&lt;/strong&gt;&lt;br /&gt;
+Generate and drop the schema every time the test is run. To avoid creating useless tables and save execution time for every test there is list of table names to create. When used with a memory database, like SQLite it’s very fast.
+The problem starts when you want to use your production database engine’s specific features what SQLite don’t have. The slight disadvantage is that the developers need to write the tables for every test class. 
+Sometimes on an old project, with many references between tables, it can be very long list to write.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Update when needed&lt;/strong&gt;&lt;br /&gt;
+Before test execution there is check in code whether the schema is up to date and update it if it isn’t. It’s a very convenient solution because you don’t have to worry about maintaining every schema separately.
+But the check does take a slight amount of additional test execution time.
+Using this approach tests can be executed in a transaction to remove saved data or truncate used tables.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/girl-computer-bored.jpg&quot; alt=&quot;Lost in computer&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;what-about-the-initial-data-in-the-database&quot;&gt;What about the initial data in the database&lt;/h2&gt;
+&lt;p&gt;Again there are three ways(have I mentioned 3 is the magic number?) to use initial data in the schema:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Factories&lt;/strong&gt;&lt;br /&gt;
+Write factories to populate the schema with the required data. It’s a class which helps us to create specific database data, ie &lt;em&gt;create user with assigned department&lt;/em&gt;  . This gives great test readability, look at the following example:&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * @test&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shouldGetCompanyUsers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;//given&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;\Tests\CompanyFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createCompany&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//create company and insert to db&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$newUser&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;\Tests\UserFactory&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;createUserForCompany&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//when&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$users&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAllForCompany&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;c1&quot;&gt;//then&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;assertEquals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$newUser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$users&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;When reading it the developer can see exactly what data was created and it’s easy to understand how the tested function should work.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Fixtures&lt;/strong&gt;&lt;br /&gt;
+Another option is to use fixtures and execute them (all or selected) before every test. This is clean solution and well supported by most frameworks. It does give more control of the initial data in tests.
+When you need to populate a single test with specific data you can make a specific fixture (which can sometimes lead to having a large number of fixture files and a mess) or use factories.
+There is a small problem with fixtures - you don’t know the values of the inserted records. You have to make an additional fetch if you need them in the tested function/assertion.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * @test&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shouldGetCategories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;//given&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFixtures&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Companies&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Users&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;]);&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Company&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//additional fetch for fixture data&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//when&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$fetchUsers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAllForCompany&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;c1&quot;&gt;//then&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;assertCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fetchUsers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;nv&quot;&gt;$newUser&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//additional fetch for fixture data&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;assertEquals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$newUser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fetchUsers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//to make this assertion works &lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;SQL script&lt;/strong&gt;&lt;br /&gt;
+Use script with SQL queries to populate the database with data when creating tables. I would not recommend it because when someone else is looking at the test case it’s not obvious where the data comes from.
+Also every developer would need to have good understanding of what the initial data in a project is. An additional problem is that rows in the initial data are bounded to specific tests by ids/names/etc.
+That makes it hard to edit in the future.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; * @test&lt;/span&gt;
+&lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shouldGetCategories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;//given&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$companyId&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//where that data comes from? Ah... specific `id` from initial data - bad approach!&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;//or:&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Company&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;name&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;companyWithUser&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//need to distinguish somehow companies&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//when&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$fetchUsers&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;getAllForCompany&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$company&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;c1&quot;&gt;//then&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;assertCount&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fetchUsers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    
+    &lt;span class=&quot;nv&quot;&gt;$newUser&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;::&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;where&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;name&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;userWithCompany&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;//additional fetch for schema data&lt;/span&gt;
+    &lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;assertEquals&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$newUser&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$fetchUsers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;//to make this assertion works &lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Many developers use an &lt;code&gt;id&lt;/code&gt; to bind schema data to the tests. At the beginning it looks harmless, but later it makes complete madness when reading the tests.
+Every time you have to go to the file &lt;code&gt;initial_data_new_new.sql&lt;/code&gt; and look for &lt;code&gt;id=2321365&lt;/code&gt;, to know what is happening in test,it really doesn’t make your life easier.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/anime-computer-bad.gif&quot; alt=&quot;Lost in computer&quot; /&gt;&lt;/p&gt;
+
+</description>
+        <pubDate>Sat, 10 Jun 2017 20:00:00 +0800</pubDate>
+        <link>https://0xch.github.io/2017/06/10/phpunit-tests-using-database-approaches/</link>
+        <guid isPermaLink="true">https://0xch.github.io/2017/06/10/phpunit-tests-using-database-approaches/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>How to prepare for Zend PHP Certification</title>
+        <description>&lt;p&gt;When I wanted to get my first professional certification the answer was simple - attempt a topic that I’m most familiar with and which I want work with in the future.&lt;/p&gt;
+
+&lt;h2 id=&quot;choice-of-certification&quot;&gt;Choice of certification&lt;/h2&gt;
+&lt;p&gt;There are some &lt;strong&gt;Linux certifications&lt;/strong&gt;, the basic ones looks easy, however what value will it give me in the future (except knowledge of course)? I don’t aim to be an administrator so maybe there is a better choice.&lt;/p&gt;
+
+&lt;p&gt;Maybe &lt;strong&gt;JavaScript&lt;/strong&gt;? When I looked I only found &lt;a href=&quot;https://www.w3schools.com/cert/cert_javascript.asp&quot;&gt;w3schools JavaScript&lt;/a&gt; certification. But to be honest it looks like a “certification” obtained after a 4 hour course of MS Word.&lt;/p&gt;
+
+&lt;p&gt;What about &lt;strong&gt;PHP&lt;/strong&gt;? At least I’m working with it all the time? For PHP there is only one choice - &lt;strong&gt;Zend Certified PHP Engineer&lt;/strong&gt; issued by the Zend organization.
+So, after about 3 months of study, I was prepared. If I look at the time spent studying it was about &lt;strong&gt;100 hours&lt;/strong&gt;. That was &lt;em&gt;the book&lt;/em&gt; plus &lt;em&gt;documentation&lt;/em&gt; and &lt;em&gt;writing sample code&lt;/em&gt; to check how things work.
+And there was additional &lt;strong&gt;30 hours&lt;/strong&gt; for making sample tests and repeating them. The exam is conducted on a computer. Most of the questions are multiple choice questions, in others you needed to write a name of a single function. There are no questions about writing whole functions etc.&lt;/p&gt;
+
+&lt;h2 id=&quot;is-it-worth-it&quot;&gt;Is it worth it?&lt;/h2&gt;
+&lt;p&gt;Since I started to place it in my CV many employers at personal interviews have told me that they liked it. It was not about this specific certificate,
+but if they see a candidate has certificates they know the candidate wanted to put their free time and effort into developing their skills. If you put effort into doing something for yourself it’s thought more likely 
+that you will put an effort into the work you do for an employer. Moreover, during the study I filled holes in my PHP knowledge and it has made me more confident about PHP.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/study-hard.gif&quot; alt=&quot;study hard&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;what-i-liked&quot;&gt;What I liked&lt;/h2&gt;
+&lt;p&gt;For the first time in my life I took an examination by &lt;strong&gt;Pearson VUE&lt;/strong&gt; and discovered that it’s a great way to do it. It’s possible to be examined in almost every part of the world planning it just a week ahead.
+Because the minimum pass rate is about 70-80% I had to be properly prepared. I had to fill in all the small gaps in my knowledge by revising all the boring stuff about basic of language (where I knew 95%).
+Without a very good reason (such as certification) I wouldn’t have done it. Also, there was a good section about security features and problems in PHP that were definitely worth a read.&lt;/p&gt;
+
+&lt;h2 id=&quot;what-i-disliked&quot;&gt;What I disliked&lt;/h2&gt;
+&lt;p&gt;Most of the questions were just about memorizing names of functions, especially array functions. Such as the differences between &lt;em&gt;array_walk()&lt;/em&gt; and &lt;em&gt;array_map()&lt;/em&gt;.
+I’m not confident that memorizing similar functions for two XML parse engines and the way to pass an object from one engine to a second is most important in PHP programming.
+Put in this way, I have never had to use it in my work.&lt;/p&gt;
+
+&lt;h2 id=&quot;how-to-study&quot;&gt;How to study&lt;/h2&gt;
+&lt;p&gt;To study I used &lt;em&gt;“Zend Certification Study Guide”&lt;/em&gt; by &lt;em&gt;Davey Shafik and Ben Ramsey&lt;/em&gt; as well as the official PHP documentation.
+Sometimes I tried to code things I never used, e.g. streams or sockets servers to understand more about it.
+The book has about &lt;strong&gt;330 pages&lt;/strong&gt; and it took me about &lt;strong&gt;100 hours&lt;/strong&gt; to read, take notes, make sample exam questions after every chapter, and write some code examples.
+I recommend making quick notes (just the name of a problem, no explanation) for everything that is new or not absolutely clear.
+Then read the notes trying to remind yourself about what it is the next day. Then do it next week, and do it last time in a time while last preparation.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/img/zend-book-cover.png&quot; alt=&quot;cover&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;I took an additional &lt;strong&gt;30 hours&lt;/strong&gt; for making variations of the sample exam questions that I found on the internet. These were mostly from previous exam versions. But it’s worth it.
+It is very important to get familiar with the style of questions. I think the habit of looking for details in the questions and answers allowed me to create better answers than book study alone.
+The best way to answer for the question is to quick reduce the number of possible answers. Instead of trying to find the most accurate answer I recommend to find absolutely the wrong answers.
+Then think about each answer, see if it could possibly be a corner-case. Sometimes it changes everything.&lt;/p&gt;
+
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;p&gt;The exam was not so bad, the questions could have been worse. The most important thing was that I had a lot of motivation to learn because of the high pass mark and the set deadline.
+If you don’t work with PHP since the release of version 3, have a spare 200$ and some free time in the evenings I think it’s a good idea to do it. Especially if you don’t have much experience with this type of exam.&lt;/p&gt;
+
+</description>
+        <pubDate>Sun, 04 Jun 2017 00:47:15 +0800</pubDate>
+        <link>https://0xch.github.io/2017/06/04/how-to-prepare-for-zend-php-certification/</link>
+        <guid isPermaLink="true">https://0xch.github.io/2017/06/04/how-to-prepare-for-zend-php-certification/</guid>
+        
+        
+      </item>
+    
+  </channel>
+</rss>
