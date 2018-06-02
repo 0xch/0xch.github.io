@@ -5,16 +5,16 @@
     <description>0xch&#39;s dev blog</description>
     <link>https://0xch.github.io/</link>
     <atom:link href="https://0xch.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 02 Jun 2018 18:54:40 +0800</pubDate>
-    <lastBuildDate>Sat, 02 Jun 2018 18:54:40 +0800</lastBuildDate>
+    <pubDate>Sat, 02 Jun 2018 19:37:13 +0800</pubDate>
+    <lastBuildDate>Sat, 02 Jun 2018 19:37:13 +0800</lastBuildDate>
     <generator>Jekyll v3.0.1</generator>
     
       <item>
         <title>Symfony PHPUnit tests using Doctrine</title>
         <description>&lt;p&gt;You can use Symfony features to easily create our test case. It automatically keeps your database schema up-to-date, creates fixtures and removes data after a test.&lt;/p&gt;
 
-&lt;p&gt;The basic use of PHPUnit with Symfony is well documented in the &lt;a href=&quot;http://symfony.com/doc/current/testing.html&quot;&gt;Official Symfony documentation&lt;/a&gt;, but what about tests using a relational database with Doctrine?
-It doesn’t work “out of the box” in Symfony. So we have to write it ourselves. &lt;a href=&quot;/2017/06/10/phpunit-tests-using-database-approaches.html&quot;&gt;Here you can read about different approaches&lt;/a&gt; for maintaining a database with tests.
+&lt;p&gt;The basic use of PHPUnit with Symfony is well documented in the &lt;a href=&quot;http://symfony.com/doc/current/testing&quot;&gt;Official Symfony documentation&lt;/a&gt;, but what about tests using a relational database with Doctrine?
+It doesn’t work “out of the box” in Symfony. So we have to write it ourselves. &lt;a href=&quot;/posts/phpunit-tests-using-database-approaches/&quot;&gt;Here you can read about different approaches&lt;/a&gt; for maintaining a database with tests.
 In this article, I’ll show you how to implement the &lt;em&gt;“Update when needed”&lt;/em&gt; process with fixtures.&lt;/p&gt;
 
 &lt;h2 id=&quot;keeping-database-up-to-date&quot;&gt;Keeping database up-to-date&lt;/h2&gt;
@@ -121,8 +121,8 @@ There is a fast and efficient solution - wrapping every single test into a datab
 
 </description>
         <pubDate>Sun, 18 Jun 2017 20:00:00 +0800</pubDate>
-        <link>https://0xch.github.io/symfony-tdd-phpunit-doctrine/</link>
-        <guid isPermaLink="true">https://0xch.github.io/symfony-tdd-phpunit-doctrine/</guid>
+        <link>https://0xch.github.io/posts/symfony-tdd-phpunit-doctrine/</link>
+        <guid isPermaLink="true">https://0xch.github.io/posts/symfony-tdd-phpunit-doctrine/</guid>
         
         
       </item>
@@ -254,8 +254,8 @@ Every time you have to go to the file &lt;code&gt;initial_data_new_new.sql&lt;/c
 
 </description>
         <pubDate>Sat, 10 Jun 2017 20:00:00 +0800</pubDate>
-        <link>https://0xch.github.io/phpunit-tests-using-database-approaches/</link>
-        <guid isPermaLink="true">https://0xch.github.io/phpunit-tests-using-database-approaches/</guid>
+        <link>https://0xch.github.io/posts/phpunit-tests-using-database-approaches/</link>
+        <guid isPermaLink="true">https://0xch.github.io/posts/phpunit-tests-using-database-approaches/</guid>
         
         
       </item>
@@ -310,8 +310,8 @@ If you don’t work with PHP since the release of version 3, have a spare 200$ a
 
 </description>
         <pubDate>Sun, 04 Jun 2017 00:47:15 +0800</pubDate>
-        <link>https://0xch.github.io/how-to-prepare-for-zend-php-certification/</link>
-        <guid isPermaLink="true">https://0xch.github.io/how-to-prepare-for-zend-php-certification/</guid>
+        <link>https://0xch.github.io/posts/how-to-prepare-for-zend-php-certification/</link>
+        <guid isPermaLink="true">https://0xch.github.io/posts/how-to-prepare-for-zend-php-certification/</guid>
         
         
       </item>
