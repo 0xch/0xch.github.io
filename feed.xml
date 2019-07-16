@@ -5,9 +5,9 @@
     <description>0xch&#39;s dev blog</description>
     <link>https://0xch.github.io/</link>
     <atom:link href="https://0xch.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 02 Jun 2018 19:37:13 +0800</pubDate>
-    <lastBuildDate>Sat, 02 Jun 2018 19:37:13 +0800</lastBuildDate>
-    <generator>Jekyll v3.0.1</generator>
+    <pubDate>Tue, 16 Jul 2019 22:20:12 +0200</pubDate>
+    <lastBuildDate>Tue, 16 Jul 2019 22:20:12 +0200</lastBuildDate>
+    <generator>Jekyll v3.1.6</generator>
     
       <item>
         <title>Symfony PHPUnit tests using Doctrine</title>
@@ -17,13 +17,13 @@
 It doesn’t work “out of the box” in Symfony. So we have to write it ourselves. &lt;a href=&quot;/posts/phpunit-tests-using-database-approaches/&quot;&gt;Here you can read about different approaches&lt;/a&gt; for maintaining a database with tests.
 In this article, I’ll show you how to implement the &lt;em&gt;“Update when needed”&lt;/em&gt; process with fixtures.&lt;/p&gt;
 
-&lt;h2 id=&quot;keeping-database-up-to-date&quot;&gt;Keeping database up-to-date&lt;/h2&gt;
-&lt;p&gt;Nobody wants to think about maintaining the test database. Just create a schema once and set up the credentials in the configuration file(&lt;code&gt;config/test/config.yml&lt;/code&gt;). Then don’t worry about updating it - it will be done automatically.
+&lt;p&gt;##Keeping database up-to-date
+Nobody wants to think about maintaining the test database. Just create a schema once and set up the credentials in the configuration file(&lt;code&gt;config/test/config.yml&lt;/code&gt;). Then don’t worry about updating it - it will be done automatically.
 There is great functionality to do it hassle-free - using &lt;em&gt;Doctrine’s&lt;/em&gt; &lt;code&gt;SchemaTool::updateSchema()&lt;/code&gt;.
 The main downside is that it can take some time, depending on the size of database schema (from 1 second for a small/medium schema to several seconds on a big schema!).
 I created a separate class because it’s needed to extend the &lt;code&gt;KernelTestCase&lt;/code&gt; to get the application’s &lt;code&gt;kernel&lt;/code&gt;.&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;GenerateSchema&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;KernelTestCase&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;GenerateSchema&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;KernelTestCase&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;generate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -40,14 +40,14 @@ I created a separate class because it’s needed to extend the &lt;code&gt;Kerne
 &lt;p&gt;You can use the above class in function &lt;code&gt;DbTestCase::setUpBeforeClass()&lt;/code&gt;, but it would execute before every test class, which is a complete runtime time waste. It’s better to execute it once.
 It doesn’t matter if we run all tests, a specific test suite or a single test. It will be always executed once. To do that you will need to create a custom &lt;code&gt;bootstrap.php&lt;/code&gt; to add these functionalities, e.g. &lt;code&gt;tests.bootstrap.php&lt;/code&gt;.&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;php&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;__DIR__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/bootstrap.php.cache&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;?&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;php&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;require&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;__DIR__&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;/bootstrap.php.cache&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$schema&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;\Tests\GenerateSchema&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
 &lt;span class=&quot;nv&quot;&gt;$schema&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;generate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;Then set the new &lt;code&gt;bootstrap&lt;/code&gt; in the phpunit configuration file (default: &lt;code&gt;app/phpunit.xml.dist&lt;/code&gt;)&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;phpunit&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;xmlns:xsi=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-xml&quot; data-lang=&quot;xml&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;phpunit&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;xmlns:xsi=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot;&lt;/span&gt;
          &lt;span class=&quot;na&quot;&gt;bootstrap=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;tests.bootstrap.php&amp;quot;&lt;/span&gt;
 &lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
 ...
@@ -58,16 +58,16 @@ It doesn’t matter if we run all tests, a specific test suite or a single test.
 
 &lt;hr /&gt;
 
-&lt;h2 id=&quot;fixtures&quot;&gt;Fixtures&lt;/h2&gt;
-&lt;p&gt;To have the possibility if adding specific fixtures for a test you can use Symfony’s fixture functionality.
+&lt;p&gt;##Fixtures
+To have the possibility if adding specific fixtures for a test you can use Symfony’s fixture functionality.
 There are two methods you can use: &lt;code&gt;DbTestCase::addFixture()&lt;/code&gt; and &lt;code&gt;DbTestCase::execute()&lt;/code&gt; which can be used by chaining, e.g.&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UsersFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;executeFixtures&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$this&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UsersFixture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;executeFixtures&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
 &lt;p&gt;I extended &lt;code&gt;WebTestCase&lt;/code&gt; because I would use it to test HTTP responses. If you don’t need it, just extend &lt;code&gt;KernelTestCase&lt;/code&gt;. Then you will need to extend this &lt;em&gt;test case&lt;/em&gt; in your every test class.
 Also, I exposed &lt;code&gt;EntityManager&lt;/code&gt; for use in tests, to get the necessary repositories from entity class.&lt;/p&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DbTestCase&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;WebTestCase&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;abstract&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;DbTestCase&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;WebTestCase&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt;     * @var Loader&lt;/span&gt;
@@ -112,15 +112,15 @@ Also, I exposed &lt;code&gt;EntityManager&lt;/code&gt; for use in tests, to get 
     &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;h3 id=&quot;cleaning-the-database&quot;&gt;Cleaning the database&lt;/h3&gt;
-&lt;p&gt;If you have fixtures for every table you set &lt;code&gt;ORMExecutor&lt;/code&gt; to remove data from a database for tables with fixtures.
+&lt;p&gt;###Cleaning the database
+If you have fixtures for every table you set &lt;code&gt;ORMExecutor&lt;/code&gt; to remove data from a database for tables with fixtures.
 However, it’s not a bulletproof solution. Imagine if a new table is created without a fixture. Then data in this table will be not cleaned after each test execution.
 There is a fast and efficient solution - wrapping every single test into a database transaction. To do it we can use &lt;a href=&quot;https://github.com/dmaicher/doctrine-test-bundle&quot;&gt;this library for Symfony (doctrine-test-bundle)&lt;/a&gt;&lt;/p&gt;
 
 &lt;p&gt;Remember to clean the whole schema used for tests before using it again.&lt;/p&gt;
 
 </description>
-        <pubDate>Sun, 18 Jun 2017 20:00:00 +0800</pubDate>
+        <pubDate>Sun, 18 Jun 2017 14:00:00 +0200</pubDate>
         <link>https://0xch.github.io/posts/symfony-tdd-phpunit-doctrine/</link>
         <guid isPermaLink="true">https://0xch.github.io/posts/symfony-tdd-phpunit-doctrine/</guid>
         
@@ -134,8 +134,8 @@ Otherwise, nobody would use them as a tool to improve the whole process, but thr
 
 &lt;p&gt;Most problems cause tests using a database. How to setup? How to make it run fast and without problem on CI machine as on developers computers?&lt;/p&gt;
 
-&lt;h2 id=&quot;approaches-for-unit-tests-using-a-database&quot;&gt;Approaches for unit tests using a database&lt;/h2&gt;
-&lt;p&gt;There are several ways to maintain a database schema for test purposes. The most popular are:&lt;/p&gt;
+&lt;p&gt;##Approaches for unit tests using a database
+There are several ways to maintain a database schema for test purposes. The most popular are:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;
@@ -165,15 +165,15 @@ Using this approach tests can be executed in a transaction to remove saved data 
 
 &lt;hr /&gt;
 
-&lt;h2 id=&quot;what-about-the-initial-data-in-the-database&quot;&gt;What about the initial data in the database&lt;/h2&gt;
-&lt;p&gt;Again there are three ways(have I mentioned 3 is the magic number?) to use initial data in the schema:&lt;/p&gt;
+&lt;p&gt;##What about the initial data in the database
+Again there are three ways(have I mentioned 3 is the magic number?) to use initial data in the schema:&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;&lt;strong&gt;Factories&lt;/strong&gt;&lt;br /&gt;
 Write factories to populate the schema with the required data. It’s a class which helps us to create specific database data, ie &lt;em&gt;create user with assigned department&lt;/em&gt;  . This gives great test readability, look at the following example:&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt; * @test&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shouldGetCompanyUsers&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
@@ -198,7 +198,7 @@ When you need to populate a single test with specific data you can make a specif
 There is a small problem with fixtures - you don’t know the values of the inserted records. You have to make an additional fetch if you need them in the tested function/assertion.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt; * @test&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shouldGetCategories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
@@ -227,7 +227,7 @@ Also every developer would need to have good understanding of what the initial d
 That makes it hard to edit in the future.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-php&quot; data-lang=&quot;php&quot;&gt;&lt;span&gt;&lt;/span&gt;&lt;span class=&quot;sd&quot;&gt;/**&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt; * @test&lt;/span&gt;
 &lt;span class=&quot;sd&quot;&gt; */&lt;/span&gt;
 &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;shouldGetCategories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
@@ -253,7 +253,7 @@ Every time you have to go to the file &lt;code&gt;initial_data_new_new.sql&lt;/c
 &lt;p&gt;&lt;img src=&quot;/img/anime-computer-bad.gif&quot; alt=&quot;Lost in computer&quot; /&gt;&lt;/p&gt;
 
 </description>
-        <pubDate>Sat, 10 Jun 2017 20:00:00 +0800</pubDate>
+        <pubDate>Sat, 10 Jun 2017 14:00:00 +0200</pubDate>
         <link>https://0xch.github.io/posts/phpunit-tests-using-database-approaches/</link>
         <guid isPermaLink="true">https://0xch.github.io/posts/phpunit-tests-using-database-approaches/</guid>
         
@@ -264,7 +264,8 @@ Every time you have to go to the file &lt;code&gt;initial_data_new_new.sql&lt;/c
         <title>How to prepare for Zend PHP Certification</title>
         <description>&lt;p&gt;When I wanted to get my first professional certification the answer was simple - attempt a topic that I’m most familiar with and which I want work with in the future.&lt;/p&gt;
 
-&lt;h2 id=&quot;choice-of-certification&quot;&gt;Choice of certification&lt;/h2&gt;
+&lt;p&gt;##Choice of certification&lt;/p&gt;
+
 &lt;p&gt;There are some &lt;strong&gt;Linux certifications&lt;/strong&gt;, the basic ones looks easy, however what value will it give me in the future (except knowledge of course)? I don’t aim to be an administrator so maybe there is a better choice.&lt;/p&gt;
 
 &lt;p&gt;Maybe &lt;strong&gt;JavaScript&lt;/strong&gt;? When I looked I only found &lt;a href=&quot;https://www.w3schools.com/cert/cert_javascript.asp&quot;&gt;w3schools JavaScript&lt;/a&gt; certification. But to be honest it looks like a “certification” obtained after a 4 hour course of MS Word.&lt;/p&gt;
@@ -273,25 +274,25 @@ Every time you have to go to the file &lt;code&gt;initial_data_new_new.sql&lt;/c
 So, after about 3 months of study, I was prepared. If I look at the time spent studying it was about &lt;strong&gt;100 hours&lt;/strong&gt;. That was &lt;em&gt;the book&lt;/em&gt; plus &lt;em&gt;documentation&lt;/em&gt; and &lt;em&gt;writing sample code&lt;/em&gt; to check how things work.
 And there was additional &lt;strong&gt;30 hours&lt;/strong&gt; for making sample tests and repeating them. The exam is conducted on a computer. Most of the questions are multiple choice questions, in others you needed to write a name of a single function. There are no questions about writing whole functions etc.&lt;/p&gt;
 
-&lt;h2 id=&quot;is-it-worth-it&quot;&gt;Is it worth it?&lt;/h2&gt;
-&lt;p&gt;Since I started to place it in my CV many employers at personal interviews have told me that they liked it. It was not about this specific certificate,
+&lt;p&gt;##Is it worth it?
+Since I started to place it in my CV many employers at personal interviews have told me that they liked it. It was not about this specific certificate,
 but if they see a candidate has certificates they know the candidate wanted to put their free time and effort into developing their skills. If you put effort into doing something for yourself it’s thought more likely 
 that you will put an effort into the work you do for an employer. Moreover, during the study I filled holes in my PHP knowledge and it has made me more confident about PHP.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/img/study-hard.gif&quot; alt=&quot;study hard&quot; /&gt;&lt;/p&gt;
 
-&lt;h2 id=&quot;what-i-liked&quot;&gt;What I liked&lt;/h2&gt;
-&lt;p&gt;For the first time in my life I took an examination by &lt;strong&gt;Pearson VUE&lt;/strong&gt; and discovered that it’s a great way to do it. It’s possible to be examined in almost every part of the world planning it just a week ahead.
+&lt;p&gt;##What I liked
+For the first time in my life I took an examination by &lt;strong&gt;Pearson VUE&lt;/strong&gt; and discovered that it’s a great way to do it. It’s possible to be examined in almost every part of the world planning it just a week ahead.
 Because the minimum pass rate is about 70-80% I had to be properly prepared. I had to fill in all the small gaps in my knowledge by revising all the boring stuff about basic of language (where I knew 95%).
 Without a very good reason (such as certification) I wouldn’t have done it. Also, there was a good section about security features and problems in PHP that were definitely worth a read.&lt;/p&gt;
 
-&lt;h2 id=&quot;what-i-disliked&quot;&gt;What I disliked&lt;/h2&gt;
-&lt;p&gt;Most of the questions were just about memorizing names of functions, especially array functions. Such as the differences between &lt;em&gt;array_walk()&lt;/em&gt; and &lt;em&gt;array_map()&lt;/em&gt;.
+&lt;p&gt;##What I disliked
+Most of the questions were just about memorizing names of functions, especially array functions. Such as the differences between &lt;em&gt;array_walk()&lt;/em&gt; and &lt;em&gt;array_map()&lt;/em&gt;.
 I’m not confident that memorizing similar functions for two XML parse engines and the way to pass an object from one engine to a second is most important in PHP programming.
 Put in this way, I have never had to use it in my work.&lt;/p&gt;
 
-&lt;h2 id=&quot;how-to-study&quot;&gt;How to study&lt;/h2&gt;
-&lt;p&gt;To study I used &lt;em&gt;“Zend Certification Study Guide”&lt;/em&gt; by &lt;em&gt;Davey Shafik and Ben Ramsey&lt;/em&gt; as well as the official PHP documentation.
+&lt;p&gt;##How to study
+To study I used &lt;em&gt;“Zend Certification Study Guide”&lt;/em&gt; by &lt;em&gt;Davey Shafik and Ben Ramsey&lt;/em&gt; as well as the official PHP documentation.
 Sometimes I tried to code things I never used, e.g. streams or sockets servers to understand more about it.
 The book has about &lt;strong&gt;330 pages&lt;/strong&gt; and it took me about &lt;strong&gt;100 hours&lt;/strong&gt; to read, take notes, make sample exam questions after every chapter, and write some code examples.
 I recommend making quick notes (just the name of a problem, no explanation) for everything that is new or not absolutely clear.
@@ -304,12 +305,12 @@ It is very important to get familiar with the style of questions. I think the ha
 The best way to answer for the question is to quick reduce the number of possible answers. Instead of trying to find the most accurate answer I recommend to find absolutely the wrong answers.
 Then think about each answer, see if it could possibly be a corner-case. Sometimes it changes everything.&lt;/p&gt;
 
-&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
-&lt;p&gt;The exam was not so bad, the questions could have been worse. The most important thing was that I had a lot of motivation to learn because of the high pass mark and the set deadline.
+&lt;p&gt;##Summary
+The exam was not so bad, the questions could have been worse. The most important thing was that I had a lot of motivation to learn because of the high pass mark and the set deadline.
 If you don’t work with PHP since the release of version 3, have a spare 200$ and some free time in the evenings I think it’s a good idea to do it. Especially if you don’t have much experience with this type of exam.&lt;/p&gt;
 
 </description>
-        <pubDate>Sun, 04 Jun 2017 00:47:15 +0800</pubDate>
+        <pubDate>Sat, 03 Jun 2017 18:47:15 +0200</pubDate>
         <link>https://0xch.github.io/posts/how-to-prepare-for-zend-php-certification/</link>
         <guid isPermaLink="true">https://0xch.github.io/posts/how-to-prepare-for-zend-php-certification/</guid>
         

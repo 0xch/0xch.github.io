@@ -59,8 +59,8 @@ Otherwise, nobody would use them as a tool to improve the whole process, but thr
 
 <p>Most problems cause tests using a database. How to setup? How to make it run fast and without problem on CI machine as on developers computers?</p>
 
-<h2 id="approaches-for-unit-tests-using-a-database">Approaches for unit tests using a database</h2>
-<p>There are several ways to maintain a database schema for test purposes. The most popular are:</p>
+<p>##Approaches for unit tests using a database
+There are several ways to maintain a database schema for test purposes. The most popular are:</p>
 
 <ul>
   <li>
@@ -90,15 +90,15 @@ Using this approach tests can be executed in a transaction to remove saved data 
 
 <hr />
 
-<h2 id="what-about-the-initial-data-in-the-database">What about the initial data in the database</h2>
-<p>Again there are three ways(have I mentioned 3 is the magic number?) to use initial data in the schema:</p>
+<p>##What about the initial data in the database
+Again there are three ways(have I mentioned 3 is the magic number?) to use initial data in the schema:</p>
 
 <ul>
   <li><strong>Factories</strong><br />
 Write factories to populate the schema with the required data. It’s a class which helps us to create specific database data, ie <em>create user with assigned department</em>  . This gives great test readability, look at the following example:</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-php" data-lang="php"><span class="sd">/**</span>
+<figure class="highlight"><pre><code class="language-php" data-lang="php"><span></span><span class="sd">/**</span>
 <span class="sd"> * @test</span>
 <span class="sd"> */</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">shouldGetCompanyUsers</span><span class="p">()</span>
@@ -123,7 +123,7 @@ When you need to populate a single test with specific data you can make a specif
 There is a small problem with fixtures - you don’t know the values of the inserted records. You have to make an additional fetch if you need them in the tested function/assertion.</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-php" data-lang="php"><span class="sd">/**</span>
+<figure class="highlight"><pre><code class="language-php" data-lang="php"><span></span><span class="sd">/**</span>
 <span class="sd"> * @test</span>
 <span class="sd"> */</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">shouldGetCategories</span><span class="p">()</span>
@@ -152,7 +152,7 @@ Also every developer would need to have good understanding of what the initial d
 That makes it hard to edit in the future.</li>
 </ul>
 
-<figure class="highlight"><pre><code class="language-php" data-lang="php"><span class="sd">/**</span>
+<figure class="highlight"><pre><code class="language-php" data-lang="php"><span></span><span class="sd">/**</span>
 <span class="sd"> * @test</span>
 <span class="sd"> */</span>
 <span class="k">public</span> <span class="k">function</span> <span class="nf">shouldGetCategories</span><span class="p">()</span>
@@ -204,6 +204,18 @@ Every time you have to go to the file <code>initial_data_new_new.sql</code> and 
 </div>
 
     </div>
+
+    
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-143945803-1"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-143945803-1');
+        </script>
+    
+
 
   </body>
 </html>

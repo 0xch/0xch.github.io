@@ -3,28 +3,28 @@
     
     <url>
         <loc>https://0xch.github.io/posts/symfony-tdd-phpunit-doctrine/</loc>
-        <lastmod>2017-06-18T20:00:00+08:00</lastmod>
+        <lastmod>2017-06-18T14:00:00+02:00</lastmod>
         <changefreq>monthly</changefreq> 
         <priority>0.5</priority>
     </url>
     
     <url>
         <loc>https://0xch.github.io/posts/phpunit-tests-using-database-approaches/</loc>
-        <lastmod>2017-06-10T20:00:00+08:00</lastmod>
+        <lastmod>2017-06-10T14:00:00+02:00</lastmod>
         <changefreq>monthly</changefreq> 
         <priority>0.5</priority>
     </url>
     
     <url>
         <loc>https://0xch.github.io/posts/how-to-prepare-for-zend-php-certification/</loc>
-        <lastmod>2017-06-04T00:47:15+08:00</lastmod>
+        <lastmod>2017-06-03T18:47:15+02:00</lastmod>
         <changefreq>monthly</changefreq> 
         <priority>0.5</priority>
     </url>
     
     <url>
         <loc>https://0xch.github.io/feed.xml</loc>
-        <lastmod>2018-06-02T19:37:13+08:00</lastmod> 
+        <lastmod>2019-07-16T22:20:12+02:00</lastmod> 
         <changefreq>monthly</changefreq> 
         <priority>0.3</priority>
         
@@ -32,7 +32,7 @@
     
     <url>
         <loc>https://0xch.github.io/</loc>
-        <lastmod>2018-06-02T19:37:13+08:00</lastmod> 
+        <lastmod>2019-07-16T22:20:12+02:00</lastmod> 
         <changefreq>monthly</changefreq> 
         <priority>0.3</priority>
         
@@ -40,7 +40,7 @@
     
     <url>
         <loc>https://0xch.github.io/css/main.css</loc>
-        <lastmod>2018-06-02T19:37:13+08:00</lastmod> 
+        <lastmod>2019-07-16T22:20:12+02:00</lastmod> 
         <changefreq>monthly</changefreq> 
         <priority>0.3</priority>
         
@@ -48,7 +48,7 @@
     
     <url>
         <loc>https://0xch.github.io/sitemap.xml</loc>
-        <lastmod>2018-06-02T19:37:13+08:00</lastmod> 
+        <lastmod>2019-07-16T22:20:12+02:00</lastmod> 
         <changefreq>monthly</changefreq> 
         <priority>0.3</priority>
         
