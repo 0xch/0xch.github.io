@@ -60,8 +60,8 @@
 It doesn’t work “out of the box” in Symfony. So we have to write it ourselves. <a href="/posts/phpunit-tests-using-database-approaches/">Here you can read about different approaches</a> for maintaining a database with tests.
 In this article, I’ll show you how to implement the <em>“Update when needed”</em> process with fixtures.</p>
 
-<p>##Keeping database up-to-date
-Nobody wants to think about maintaining the test database. Just create a schema once and set up the credentials in the configuration file(<code>config/test/config.yml</code>). Then don’t worry about updating it - it will be done automatically.
+<h2 id="keeping-database-up-to-date">Keeping database up-to-date</h2>
+<p>Nobody wants to think about maintaining the test database. Just create a schema once and set up the credentials in the configuration file(<code>config/test/config.yml</code>). Then don’t worry about updating it - it will be done automatically.
 There is great functionality to do it hassle-free - using <em>Doctrine’s</em> <code>SchemaTool::updateSchema()</code>.
 The main downside is that it can take some time, depending on the size of database schema (from 1 second for a small/medium schema to several seconds on a big schema!).
 I created a separate class because it’s needed to extend the <code>KernelTestCase</code> to get the application’s <code>kernel</code>.</p>
@@ -101,8 +101,8 @@ It doesn’t matter if we run all tests, a specific test suite or a single test.
 
 <hr />
 
-<p>##Fixtures
-To have the possibility if adding specific fixtures for a test you can use Symfony’s fixture functionality.
+<h2 id="fixtures">Fixtures</h2>
+<p>To have the possibility if adding specific fixtures for a test you can use Symfony’s fixture functionality.
 There are two methods you can use: <code>DbTestCase::addFixture()</code> and <code>DbTestCase::execute()</code> which can be used by chaining, e.g.</p>
 
 <figure class="highlight"><pre><code class="language-php" data-lang="php"><span></span><span class="nv">$this</span><span class="o">-&gt;</span><span class="na">addFixture</span><span class="p">(</span><span class="k">new</span> <span class="nx">UsersFixture</span><span class="p">())</span><span class="o">-&gt;</span><span class="na">executeFixtures</span><span class="p">();</span></code></pre></figure>
@@ -155,8 +155,8 @@ Also, I exposed <code>EntityManager</code> for use in tests, to get the necessar
     <span class="p">}</span>
 <span class="p">}</span></code></pre></figure>
 
-<p>###Cleaning the database
-If you have fixtures for every table you set <code>ORMExecutor</code> to remove data from a database for tables with fixtures.
+<h3 id="cleaning-the-database">Cleaning the database</h3>
+<p>If you have fixtures for every table you set <code>ORMExecutor</code> to remove data from a database for tables with fixtures.
 However, it’s not a bulletproof solution. Imagine if a new table is created without a fixture. Then data in this table will be not cleaned after each test execution.
 There is a fast and efficient solution - wrapping every single test into a database transaction. To do it we can use <a href="https://github.com/dmaicher/doctrine-test-bundle">this library for Symfony (doctrine-test-bundle)</a></p>
 
