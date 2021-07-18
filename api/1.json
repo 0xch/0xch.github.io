@@ -1,0 +1,9 @@
+{
+  "name": "Mage #1",
+  "description": "Friendly mage with powerzzzz",
+  "image": "https://0xch.github.io/api/img/1.png",
+  "attributes": {
+    "attr1": "test1",
+    "attr2": "test2"
+  }
+}
